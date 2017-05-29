@@ -11,11 +11,14 @@
   },
   "dependencies": {
     "ejs": "2.5.6",
-    "express": "4.15.2"
+    "express": "4.14.1",
+    "body-parser": "1.17.1",
+    "cookie-parser": "1.4.3",
+    "socket.io": "2.0.1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/heroku/node-js-getting-started"
+    "url": "https://github.com/heroku/soditictoe"
   },
   "keywords": [
     "node",
