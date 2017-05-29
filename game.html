@@ -1,0 +1,105 @@
+<html>
+	<head>
+		<title>Tic Tac Toe</title>
+		
+		<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		
+		<link type="text/css" rel="stylesheet" href="css/materialize.css"  media="screen,projection"/>
+		<link type="text/css" rel="stylesheet" href="style.css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		
+		<style type="text/css">
+			.box {
+				border: 2px solid #000000;
+				height: 2em;
+				line-height: 2em;
+				text-align: center;
+				font-size: 4em;
+			}
+		</style>
+		
+		<script type="text/javascript">
+			function getCookie(cname) {
+				var name = cname + "=";
+				var decodedCookie = decodeURIComponent(document.cookie);
+				var ca = decodedCookie.split(';');
+				for(var i = 0; i <ca.length; i++) {
+					var c = ca[i];
+					while (c.charAt(0) == ' ') {
+						c = c.substring(1);
+					}
+					if (c.indexOf(name) == 0) {
+						return c.substring(name.length, c.length);
+					}
+				}
+				return "";
+			}
+			
+			function move(block) {
+// 				alert(block);
+				var row = block%10;
+				var col = block/10;
+				
+				var moveData = {'sessid' : getCookie('sessid'), 'gameid' : getCookie('gameid'), 'block' : block};
+				socket.emit('move', moveData);
+			}
+			
+		</script>
+	</head>
+	
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="col s12 m4 offset-m4">
+					<div class="row">
+						<div class="col s4 box" id="00" onclick="move(this.id);"></div>
+						<div class="col s4 box" id="01" onclick="move(this.id);"></div>
+						<div class="col s4 box" id="02" onclick="move(this.id);"></div>
+						
+						<div class="col s4 box" id="10" onclick="move(this.id);"></div>
+						<div class="col s4 box" id="11" onclick="move(this.id);"></div>
+						<div class="col s4 box" id="12" onclick="move(this.id);"></div>
+						
+						<div class="col s4 box" id="20" onclick="move(this.id);"></div>
+						<div class="col s4 box" id="21" onclick="move(this.id);"></div>
+						<div class="col s4 box" id="22" onclick="move(this.id);"></div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<center>
+				<div class="col s12" id="result" style="font-size: 2em;">
+				
+				</div>
+				</center>
+			</div>
+		</div>
+	
+		<script type="text/javascript">
+			var socket = io('/game');
+			var	gid = getCookie('gameid'); 
+			socket.emit('registerUser', getCookie('sessid'));
+			socket.emit('startGame', gid);
+			
+			socket.on('paint', function(data) {
+				var i, j;
+				for(i=0; i<3; i++) {
+					for(j=0; j<3; j++) {
+						var blockid = i +  "" + j;
+						document.getElementById(blockid).innerHTML = data[i][j];
+					}
+				}
+			});
+			
+			socket.on('win', function() {
+				document.getElementById("result").innerHTML = "You win ..!";
+			});
+			socket.on('loose', function() {
+				document.getElementById("result").innerHTML = "You loose ..!"
+			});
+		</script>
+	</body>
+</html>

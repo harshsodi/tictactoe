@@ -1,0 +1,160 @@
+<html>
+	<head>
+		<title>Tic Tac Toe</title>
+		
+		<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		
+		<link type="text/css" rel="stylesheet" href="css/materialize.css"  media="screen,projection"/>
+		<link type="text/css" rel="stylesheet" href="style.css"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		
+		
+		<script type="text/javascript">
+			function getCookie(cname) {
+				var name = cname + "=";
+				var decodedCookie = decodeURIComponent(document.cookie);
+				var ca = decodedCookie.split(';');
+				for(var i = 0; i <ca.length; i++) {
+					var c = ca[i];
+					while (c.charAt(0) == ' ') {
+						c = c.substring(1);
+					}
+					if (c.indexOf(name) == 0) {
+						return c.substring(name.length, c.length);
+					}
+				}
+				return "";
+			}
+			
+			function leave() {
+				socket.emit('leave', getCookie("sessid"));				
+				document.cookie = "sessid=nothing; expires=Thu, 18 Dec 2013 12:00:00 UTC; path=/";
+// 				alert("leaving");
+				window.location.href = '/';
+			}
+		</script>
+		
+		<script type="text/javascript">
+			function challenge(opponent) {
+// 				alert("challenging" + opponent);
+				var challengeDetails = {"from" : getCookie("sessid") , "to" : opponent};
+				socket.emit('challenge', JSON.stringify(challengeDetails));
+				$('#modal2').openModal({dismissible:false});
+			}
+			function cancelChallenge() {
+				socket.emit('cancelChallenge', getCookie("sessid"));
+			}
+			function decline() {
+				socket.emit('cancelChallenge', getCookie("sessid"));
+			}
+			function accept() {
+				socket.emit('acceptChallenge', getCookie("sessid"));
+			}
+			
+		</script>
+	</head>
+	
+	<body>
+		
+			<!-- Modal Trigger -->
+		<a class="waves-effect waves-light btn modal-trigger" href="#modal1" style="display: none;">Modal</a>
+		
+		<div id="modal1" class="modal">
+			<div class="modal-content">
+				<h4 id="modal-title"></h4>
+				<p>is challenging you</p>
+			</div>
+			<div class="modal-footer">
+				<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat" onclick="accept();">Accept</a>
+				<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat" onclick="decline();">Decline</a>
+			</div>
+		</div>
+		
+		<div id="modal2" class="modal">
+			<div class="modal-content">
+				<h4>Outgoing challenge</h4>
+				<p>A bunch of text</p>
+			</div>
+			<div class="modal-footer">
+				<a href="#!" class=" modal-action modal-close waves-effect waves-green btn-flat" onclick='cancelChallenge();'>Cancel</a>
+			</div>
+		</div>
+	
+		<div class="row">
+			<div class="col s12 m6 l4">
+			<ul class="collection with-header" id="onlineUsers">
+				
+			</ul>
+			</div>
+			<div class="col s12 m6 l8">
+				Sodiwala
+			</div>
+		</div>
+		
+		<script type="text/javascript">
+// 			alert(document.cookie);
+			var socket = io();
+			var ru = {id : getCookie('sessid'), name: getCookie('name')};
+			socket.emit("registerUser", JSON.stringify(ru));
+			
+			socket.emit('getOnlineUsers');
+			var onlineUsers;
+			socket.on('onlineUsers', function(data) {
+				onlineUsers = JSON.parse(data);
+					document.getElementById('onlineUsers').innerHTML ="";
+					document.getElementById('onlineUsers').innerHTML = "<li class='collection-header'><h4>Players in arena</h4></li>"
+				
+				for(u in onlineUsers) {
+					if(onlineUsers[u].name != getCookie("name") && !onlineUsers[u].busy) {
+						document.getElementById('onlineUsers').innerHTML += "<li class='collection-item' style='padding-top: 20px;'><div class='row'><div class='col s5' style='font-size: 1.5em; padding: 5px;'>" + onlineUsers[u].name + "</div><div class='col s6'> <button onclick='challenge(\"" + onlineUsers[u].name +"\");' class='btn waves-effect waves-teal'>Challenge</button></div></div></li>"
+// 						<i class='material-icons left'>device_hub</i>
+					}
+					if(onlineUsers[u].name != getCookie("name") && onlineUsers[u].busy) {
+						document.getElementById('onlineUsers').innerHTML += "<li class='collection-item' style='padding-top: 20px;'><div class='row'><div class='col s5' style='font-size: 1.5em; padding: 5px;'>" + onlineUsers[u].name + "</div><div class='col s6'></div></div></li>"
+// 						<i class='material-icons left'>device_hub</i>
+					}
+				}				
+			});
+						
+			socket.on('challengeRequest', function(data) {
+// 				alert(data + " challenges you");
+				document.getElementById('modal-title').innerHTML = data + " is challenging youd"; 
+				$('#modal1').openModal({dismissible:false});
+			});
+			
+			socket.on('opponentLeft', function() {
+				$('#modal1').closeModal({dismissible:false});
+				$('#modal2').closeModal({dismissible:false});
+			});
+			
+			socket.on('challengeCancelled', function() {
+				$('#modal1').closeModal({dismissible:false});
+				$('#modal2').closeModal({dismissible:false});
+			});
+			
+			socket.on('challengeAccepted', function(data) {
+				$('#modal1').closeModal({dismissible:false});
+				$('#modal2').closeModal({dismissible:false});
+// 				alert("the game is on");
+				document.cookie = "gameid="+data;
+				window.location = '/game';
+			});
+		</script>
+		
+
+		<script type="text/javascript" src="js/materialize.min.js"></script>
+		<script type="text/javascript">
+			
+			$(document).ready(function(){
+				$('.modal-trigger').leanModal();
+			});
+		</script>
+		
+		<div id="leave">
+			<button onclick="leave();">Leave</button>
+		</div>
+	</body>
+</html>
